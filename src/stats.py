@@ -1,21 +1,23 @@
-from Bio.PopGen.GenePop.Controller import GenePopController
-from Bio.PopGen.LDNe.Controller import LDNeController
-from Bio.PopGen import LDNe
 import os
 import sys
 import shutil
 from copy import deepcopy
-from myUtils import getConfig
 
-if len(sys.argv)!=2:
+from Bio.PopGen.GenePop.Controller import GenePopController
+from PopGen import NeEstimator2
+from PopGen.NeEstimator2.Controller import NeEstimator2Controller
+import myUtils
+
+if len(sys.argv) != 2:
     print "Syntax:", sys.argv[0], "<conffile>"
     sys.exit(-1)
 
+etc = myUtils.getEtc()
 
-gpc = GenePopController('/home/tiago/bio')
-ldnec = LDNeController('/home/tiago/bio')
+gpc = GenePopController(etc['genepop'])
+ne2 = NeEstimator2Controller(etc['ne2'])
 
-cfg = getConfig(sys.argv[1])
+cfg = myUtils.getConfig(sys.argv[1])
 
 
 def all(list):
@@ -23,73 +25,83 @@ def all(list):
         print e,
     print
 
+
 def interval(list):
-    for e1,e2 in list:
+    for e1, e2 in list:
         print str(e1) + "#" + str(e2),
     print
+
 
 def median(list):
     list = deepcopy(list)
     list.sort()
     size = len(list)
     if size % 2 == 0:
-        return (list[size/2-1]+list[size/2])/2
+        return (list[size / 2 - 1] + list[size / 2]) / 2
     else:
-        return list[size/2]
+        return list[size / 2]
+
 
 def calcStats(numIndivs, numLoci):
-    for gen in cfg.saveGens:
-        for rep in range(cfg.reps):
-           #print rep,
-           if cfg.demo=="constant":
-                fname=('samp/%f/%d/%d/smp-%d-%d-%d.txt'  %
-                   (cfg.mutFreq, numIndivs, numLoci, cfg.popSize, gen, rep) )
-           tempName =  "xaxa%d" % (os.getpid(),)
-           shutil.copyfile(fname, tempName)
-           ldnec.run_ldne(tempName, tempName + '.out')
-           ldout = open(tempName + '.out')
-           ldres = LDNe.RecordParser().parse(ldout)
-           mNes = []
-           mNesPow = []
-           for id, fcases in ldres.populations:
-               if numIndivs<25:
-                   hm, ic, or2, er2, (ne, (ne95, ne05), (j95, j05)) = fcases[0]
-               else:
-                   hm, ic, or2, er2, (ne, (ne95, ne05), (j95, j05)) = fcases[1]
-               mNes.append(ne)
-               mNesPow.append((ne95,ne05))
-           ldout.close()
-
-           genos =  gpc.get_loci_genotype_counts(tempName)
-           mGenos = []
-           mRich = []
-           for popGenos in genos[0]:
-               currGenos = []
-               currRich = []
-               for loci, lst, expHo, obsHo, expHe, obsHe in popGenos:
-                   alleles = set()
-                   for a1, a2, c in lst:
-                       alleles.add(a1)
-                       alleles.add(a2)
-                   currGenos.append(expHe/(expHe+expHo))
-                   currRich.append(len(alleles))
-               mGenos.append(currGenos)
-               mRich.append(currRich)
-
-           for pi in range(len(mGenos)):
-               print gen, rep, "ExpHe" + str(pi+1),
-               all(mGenos[pi])
-               print gen, rep, "AllRich" + str(pi+1),
-               all(mRich[pi])
-           print gen, rep, "Ne",
-           all(mNes)
-           print gen, rep, "NePow",
-           interval(mNesPow)
+    blocks = myUtils.getBlocks(cfg)
+    for rep in range(cfg.reps):
+        fname = myUtils.getConc(cfg, numIndivs, numLoci, rep)
+        tempName = "xaxa%d" % os.getpid()
+        coanc = {}
+        ldne = {}
+        het = {}
+        hetNb = {}
+        temp = []
+        for i in range(len(blocks)):
+            gens = blocks[i]
+            shutil.copyfile(fname + "-" + str(i), tempName)
+            ne2.run_neestimator2(tempName, tempName + '.out',
+                                 LD=True, hets=True, coanc=True,
+                                 temp=gens)
+            ldout = open(tempName + '.out')
+            rec = NeEstimator2.parse(ldout)
+            for j in range(len(gens)):
+                if gens[j] in cfg.futureGens:
+                    coanc[gens[j]] = rec.coanc[j]["EstNeb"]
+                    ldne[gens[j]] = [rec.ld[j][c]["EstNe"] for c in
+                                     range(len(rec.ld[j]))]
+                    het[gens[j]] = [rec.het[j][c]["HMean"] for c in
+                                    range(len(rec.het[j]))]
+                    hetNb[gens[j]] = [rec.het[j][c]["EstNeb"] for c in
+                                      range(len(rec.het[j]))]
+            for tmp in rec.temporal:
+                temp.append(tmp)
+        for gen in cfg.futureGens:
+            print rep, gen,
+            print coanc[gen]
+            for ld in ldne[gen]:
+                print ld,
+            print
+            for h in het[gen]:
+                print h,
+            print
+            for hnb in hetNb[gen]:
+                print ld,
+            print
+        for tmp in temp:
+            g1 = tmp["generation1"]
+            g2 = tmp["generation2"]
+            if g1 in cfg.refGens and g2 in cfg.futureGens:
+                pl = tmp["results"]["Pollak"]
+                jr = tmp["results"]["Jorde/Ryman"]
+                nt = tmp["results"]["Nei/Tajima"]
+                print rep, "temp", g1, g2,
+                print [pl[c]["Ne"] for c in range(len(pl))],
+                print [jr[c]["Ne"] for c in range(len(pl))],
+                print [nt[c]["Ne"] for c in range(len(pl))]
 
 stdout = sys.stdout
 for numIndivs, numLoci in cfg.sampleStrats:
-    if cfg.demo=="constant":
-        sys.stdout = open("LDNe-smp-%d-%d-%d.txt" %
+    if cfg.demo == "constant":
+        sys.stdout = open("con-%d-%d-%d.txt" %
                           (numIndivs, numLoci, cfg.popSize), "w")
+    elif cfg.demo == "season":
+        sys.stdout = open("ses-%d-%d-%d-%d-%d.txt" %
+                          (numIndivs, numLoci, cfg.popSize, cfg.A, cfg.B), "w")
     calcStats(numIndivs, numLoci)
-sys.stdout=out
+sys.stdout = stdout
