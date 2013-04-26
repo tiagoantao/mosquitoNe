@@ -77,13 +77,13 @@ def saver(pop, param):
     return True
 
 
-def getSeasonFun(initialPop, genStart, A, B):
+def getSeasonFun(initialPop, genStart, A, B, T):
     def getSeasonFun(pop):
         gen = pop.dvars().gen
         if gen < genStart:
             return initialPop
         else:
-            return A * math.cos(2.0 * (gen - genStart) * math.pi / 12) + B
+            return A * math.cos(2.0 * (gen - genStart) * math.pi / T) + B
     return getSeasonFun
 
 for sampleStrat in cfg.sampleStrats:
@@ -114,7 +114,7 @@ if cfg.demo == "constant":
 elif cfg.demo == "season":
     mateOp = sp.RandomMating(subPopSize=getSeasonFun(cfg.popSize,
                                                      cfg.seasonGen,
-                                                     cfg.A, cfg.B))
+                                                     cfg.A, cfg.B, cfg.T))
 
 reportOps = [
     sp.PyOperator(func=saver, param=oExpr, at=cfg.saveGens),

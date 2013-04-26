@@ -7,7 +7,8 @@ etcConf = sysDir + "/etc.conf"
 
 oExpr = {
     "constant": '"samp/%f/%%d/%%d/smp-%d-%%d-%%d.txt" %% ',
-    "season":   '"samp/ses/%f/%%d/%%d/smp-%d-%d-%d-%%d-%%d.txt" %% ',
+    "season":   '"samp/ses/%f/%%d/%%d/smp-%d-%d-%d-%d-%%d-%%d.txt" %% ',
+    "bot":      '"samp/bot/%f/%%d/%%d/smp-%d-%d-%d-%%d-%%d.txt" %% ',
 }
 
 
@@ -36,6 +37,10 @@ def getConfig(fName):
         cfg.seasonGen = config.getint("pop", "seasonGen")
         cfg.A = config.getint("pop", "A")
         cfg.B = config.getint("pop", "B")
+        try:
+            cfg.T = config.getint("pop", "T")
+        except ConfigParser.NoOptionError:
+            cfg.T = 12
 
     cfg.startAlleles = config.getint("genome", "startAlleles")
     cfg.mutFreq = config.getfloat("genome", "mutFreq")
@@ -55,8 +60,12 @@ def getExpr(cfg, numIndivs, numLoci, gen, rep, doeval=False):
     if cfg.demo == "season":
         rExpr = (oExpr[cfg.demo] +
                  '(numIndivs, numLoci, gen, rep)') % (
-                     cfg.mutFreq, cfg.popSize, cfg.A, cfg.B)
-    else:
+                     cfg.mutFreq, cfg.popSize, cfg.A, cfg.B, cfg.T)
+    elif cfg.demo == "bottle":
+        rExpr = (oExpr[cfg.demo] +
+                 '(numIndivs, numLoci, gen, rep)') % (
+                     cfg.mutFreq, cfg.popSize, cfg.bottleGen, cfg.popSize2)
+    elif cfg.demo == "constant":
         rExpr = (oExpr[cfg.demo] +
                  '(numIndivs, numLoci, gen, rep)') % (cfg.mutFreq, cfg.popSize)
     if doeval:
@@ -67,10 +76,17 @@ def getExpr(cfg, numIndivs, numLoci, gen, rep, doeval=False):
 
 def getConc(cfg, numIndivs, numLoci, rep):
     if cfg.demo == "season":
-        return "samp/ses-%d-%d-%f-%d-%d-%d-%d.txt" % (numIndivs, numLoci,
+        return "samp/ses-%d-%d-%f-%d-%d-%d-%d-%d.txt" % (numIndivs, numLoci,
+                                                         cfg.mutFreq,
+                                                         cfg.popSize,
+                                                         cfg.A, cfg.B,
+                                                         cfg.T, rep)
+    elif cfg.demo == "bottle":
+        return "samp/bot-%d-%d-%f-%d-%d-%d-%d.txt" % (numIndivs, numLoci,
                                                       cfg.mutFreq, cfg.popSize,
-                                                      cfg.A, cfg.B, rep)
-    else:
+                                                      cfg.bottleGen,
+                                                      cfg.popSize2, rep)
+    elif cfg.demo == "constant":
         return "samp/con-%d-%d-%f-%d-%d.txt" % (numIndivs, numLoci,
                                                 cfg.mutFreq, cfg.popSize, rep)
 
