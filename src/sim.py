@@ -73,7 +73,7 @@ def saver(pop, param):
         rep = pop.dvars().rep
         gen = pop.dvars().gen
         ioExpr = eval(oExpr)
-        genepop.save(pop, numIndivs, numLoci, ioExpr, 2)
+        genepop.save(pop, min([numIndivs, pop.popSize()]), numLoci, ioExpr, 2)
     return True
 
 
