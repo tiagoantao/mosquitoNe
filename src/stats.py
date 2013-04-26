@@ -49,7 +49,6 @@ def calcStats(numIndivs, numLoci):
         tempName = "xaxa%d" % os.getpid()
         coanc = {}
         ldne = {}
-        het = {}
         hetNb = {}
         temp = []
         for i in range(len(blocks)):
@@ -65,8 +64,6 @@ def calcStats(numIndivs, numLoci):
                     coanc[gens[j]] = rec.coanc[j]["EstNeb"]
                     ldne[gens[j]] = [rec.ld[j][c]["EstNe"] for c in
                                      range(len(rec.ld[j]))]
-                    het[gens[j]] = [rec.het[j][c]["HMean"] for c in
-                                    range(len(rec.het[j]))]
                     hetNb[gens[j]] = [rec.het[j][c]["EstNeb"] for c in
                                       range(len(rec.het[j]))]
             for tmp in rec.temporal:
@@ -77,11 +74,8 @@ def calcStats(numIndivs, numLoci):
             for ld in ldne[gen]:
                 print ld,
             print
-            for h in het[gen]:
-                print h,
-            print
             for hnb in hetNb[gen]:
-                print ld,
+                print hnb,
             print
         for tmp in temp:
             g1 = tmp["generation1"]
@@ -91,17 +85,12 @@ def calcStats(numIndivs, numLoci):
                 jr = tmp["results"]["Jorde/Ryman"]
                 nt = tmp["results"]["Nei/Tajima"]
                 print rep, "temp", g1, g2,
-                print [pl[c]["Ne"] for c in range(len(pl))],
-                print [jr[c]["Ne"] for c in range(len(pl))],
-                print [nt[c]["Ne"] for c in range(len(pl))]
+                print "#".join([str(pl[c]["Ne"]) for c in range(len(pl))]),
+                print "#".join([str(jr[c]["Ne"]) for c in range(len(pl))]),
+                print "#".join([str(nt[c]["Ne"]) for c in range(len(pl))])
 
 stdout = sys.stdout
 for numIndivs, numLoci in cfg.sampleStrats:
-    if cfg.demo == "constant":
-        sys.stdout = open("con-%d-%d-%d.txt" %
-                          (numIndivs, numLoci, cfg.popSize), "w")
-    elif cfg.demo == "season":
-        sys.stdout = open("ses-%d-%d-%d-%d-%d.txt" %
-                          (numIndivs, numLoci, cfg.popSize, cfg.A, cfg.B), "w")
+    sys.stdout = open(myUtils.getStatName(cfg, numIndivs, numLoci), "w")
     calcStats(numIndivs, numLoci)
 sys.stdout = stdout

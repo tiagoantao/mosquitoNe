@@ -12,6 +12,13 @@ oExpr = {
 }
 
 
+def flt(x):
+    try:
+        return float(x)
+    except ValueError:
+        return float("inf")
+
+
 def getEtc():
     etc = {}
     cfg = ConfigParser.ConfigParser()
@@ -89,6 +96,45 @@ def getConc(cfg, numIndivs, numLoci, rep):
     elif cfg.demo == "constant":
         return "samp/con-%d-%d-%f-%d-%d.txt" % (numIndivs, numLoci,
                                                 cfg.mutFreq, cfg.popSize, rep)
+
+
+def getStatName(cfg, numIndivs, numLoci):
+    if cfg.demo == "constant":
+        return "con-%d-%d-%d.txt" % (numIndivs, numLoci, cfg.popSize)
+    elif cfg.demo == "season":
+        return "ses-%d-%d-%d-%d-%d-%d.txt" % (numIndivs, numLoci,
+                                              cfg.popSize, cfg.A,
+                                              cfg.B, cfg.T)
+    elif cfg.demo == "bottle":
+        return "ses-%d-%d-%d-%d-%d.txt" % (numIndivs, numLoci,
+                                           cfg.popSize, cfg.bottleGen,
+                                           cfg.popSize2)
+
+
+def getStat(f):
+    l = f.readline()
+    while l != "":
+        rec = {}
+        l = l.rstrip()
+        if l.find("temp") > -1:
+            toks = l.split(" ")
+            rec["type"] = "temp"
+            rec["rep"] = int(toks[0])
+            rec["g1"] = int(toks[2])
+            rec["g2"] = int(toks[3])
+            rec["Pollak"] = [flt(x) for x in toks[4].split("#")]
+            rec["Jorde/Ryman"] = [flt(x) for x in toks[5].split("#")]
+            rec["Nei/Tajima"] = [flt(x) for x in toks[6].split("#")]
+            yield rec
+        else:
+            toks = l.split(" ")
+            rec["rep"] = int(toks[0])
+            rec["coanc"] = flt(toks[2])
+            rec["LD"] = [flt(x) for x in f.readline().split(" ")] 
+            rec["Het"] = [flt(x) for x in f.readline().split(" ")] 
+            yield rec
+        l = f.readline()
+    f.close()
 
 
 def getBlocks(cfg):

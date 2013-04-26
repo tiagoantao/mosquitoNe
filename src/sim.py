@@ -86,6 +86,17 @@ def getSeasonFun(initialPop, genStart, A, B, T):
             return A * math.cos(2.0 * (gen - genStart) * math.pi / T) + B
     return getSeasonFun
 
+
+def getBottleFun(initialPop, genBottle, smallPop):
+    def getBottleFun(pop):
+        gen = pop.dvars().gen
+        if gen<genBottle:
+            return initialPop
+        else:
+            return smallPop
+    return getBottleFun
+
+
 for sampleStrat in cfg.sampleStrats:
     numIndivs = sampleStrat[0]
     numLoci = sampleStrat[1]
@@ -115,11 +126,17 @@ elif cfg.demo == "season":
     mateOp = sp.RandomMating(subPopSize=getSeasonFun(cfg.popSize,
                                                      cfg.seasonGen,
                                                      cfg.A, cfg.B, cfg.T))
+elif cfg.demo == "bottle":
+    mateOp = sp.RandomMating(subPopSize=getSeasonFun(cfg.popSize,
+                                                     cfg.seasonGen,
+                                                     cfg.bottleGen,
+                                                     cfg.popSize2))
 
 reportOps = [
     sp.PyOperator(func=saver, param=oExpr, at=cfg.saveGens),
-    sp.PyEval(r'"gen %d\n" % gen', reps=0),
-    #PyEval(r'"size %s\n" % subPopSize', reps=0),
+    sp.Stat(popSize=True),
+    sp.PyEval(r'"gen %d" % gen', reps=0),
+    sp.PyEval(r'" size %d\n" % subPopSize[0]', reps=0),
 ]
 sim = createSim(pop, cfg.reps)
 evolveSim(sim, cfg.gens, 0 + cfg.numMSats, mateOp,
