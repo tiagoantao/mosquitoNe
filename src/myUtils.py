@@ -128,10 +128,12 @@ def getStat(f):
             yield rec
         else:
             toks = l.split(" ")
+            rec["type"] = "notemp"
             rec["rep"] = int(toks[0])
+            rec["gen"] = int(toks[1])
             rec["coanc"] = flt(toks[2])
-            rec["LD"] = [flt(x) for x in f.readline().split(" ")] 
-            rec["Het"] = [flt(x) for x in f.readline().split(" ")] 
+            rec["LD"] = [flt(x) for x in f.readline().split(" ")]
+            rec["Het"] = [flt(x) for x in f.readline().split(" ")]
             yield rec
         l = f.readline()
     f.close()
