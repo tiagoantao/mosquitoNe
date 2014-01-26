@@ -90,7 +90,7 @@ def getSeasonFun(initialPop, genStart, A, B, T):
 def getBottleFun(initialPop, genBottle, smallPop):
     def getBottleFun(pop):
         gen = pop.dvars().gen
-        if gen<genBottle:
+        if gen < genBottle:
             return initialPop
         else:
             return smallPop
@@ -115,9 +115,9 @@ for sampleStrat in cfg.sampleStrats:
             pass  # OK
         acum += os.sep + str(deepDir)
 
-(pop, popPreOps, popPostOps, oExpr) = createSinglePop(
+pop, popPreOps, popPostOps, oExpr = createSinglePop(
     cfg.popSize, cfg.numMSats, cfg.demo)
-(loci, genInitOps, genPreOps) = createGenome(cfg.popSize, cfg.numMSats, 0)
+loci, genInitOps, genPreOps = createGenome(cfg.popSize, cfg.numMSats, 0)
 
 
 if cfg.demo == "constant":
