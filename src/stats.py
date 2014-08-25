@@ -4,8 +4,8 @@ import shutil
 from copy import deepcopy
 
 from Bio.PopGen.GenePop.Controller import GenePopController
-from PopGen import NeEstimator2
-from PopGen.NeEstimator2.Controller import NeEstimator2Controller
+from igrat.genetics.popgen import ne2
+from igrat.genetics.popgen.ne2.Controller import NeEstimator2Controller
 import myUtils
 
 if len(sys.argv) != 2:
@@ -15,7 +15,7 @@ if len(sys.argv) != 2:
 etc = myUtils.getEtc()
 
 gpc = GenePopController(etc['genepop'])
-ne2 = NeEstimator2Controller(etc['ne2'])
+ne2c = NeEstimator2Controller(etc['ne2'])
 
 cfg = myUtils.getConfig(sys.argv[1])
 
@@ -54,11 +54,11 @@ def calcStats(numIndivs, numLoci):
         for i in range(len(blocks)):
             gens = blocks[i]
             shutil.copyfile(fname + "-" + str(i), tempName)
-            ne2.run_neestimator2(tempName, tempName + '.out',
-                                 LD=True, hets=True, coanc=True,
-                                 temp=gens)
+            ne2c.run_neestimator2('.', tempName, '.', tempName + '.out',
+                                  LD=True, hets=True, coanc=True,
+                                  temp=gens)
             ldout = open(tempName + '.out')
-            rec = NeEstimator2.parse(ldout)
+            rec = ne2.parse(ldout)
             for j in range(len(gens)):
                 if gens[j] in cfg.futureGens:
                     coanc[gens[j]] = rec.coanc[j]["EstNeb"]
