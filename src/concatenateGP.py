@@ -1,8 +1,14 @@
+import os
 import sys
 
 import myUtils
 
 model = sys.argv[1]
+
+try:
+    os.mkdir('samp/conc')
+except OSError:
+    pass  # Alread exists: OK
 
 
 cfg = myUtils.getConfig(model)

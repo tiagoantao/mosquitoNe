@@ -83,19 +83,16 @@ def getExpr(cfg, numIndivs, numLoci, gen, rep, doeval=False):
 
 def getConc(cfg, numIndivs, numLoci, rep):
     if cfg.demo == "season":
-        return "samp/ses-%d-%d-%f-%d-%d-%d-%d-%d.txt" % (numIndivs, numLoci,
-                                                         cfg.mutFreq,
-                                                         cfg.popSize,
-                                                         cfg.A, cfg.B,
-                                                         cfg.T, rep)
+        return "samp/conc/ses-%d-%d-%f-%d-%d-%d-%d-%d.txt" % (
+            numIndivs, numLoci, cfg.mutFreq, cfg.popSize,
+            cfg.A, cfg.B, cfg.T, rep)
     elif cfg.demo == "bottle":
-        return "samp/bot-%d-%d-%f-%d-%d-%d-%d.txt" % (numIndivs, numLoci,
-                                                      cfg.mutFreq, cfg.popSize,
-                                                      cfg.bottleGen,
-                                                      cfg.popSize2, rep)
+        return "samp/conc/bot-%d-%d-%f-%d-%d-%d-%d.txt" % (
+            numIndivs, numLoci, cfg.mutFreq, cfg.popSize,
+            cfg.bottleGen, cfg.popSize2, rep)
     elif cfg.demo == "constant":
-        return "samp/con-%d-%d-%f-%d-%d.txt" % (numIndivs, numLoci,
-                                                cfg.mutFreq, cfg.popSize, rep)
+        return "samp/conc/con-%d-%d-%f-%d-%d.txt" % (
+            numIndivs, numLoci, cfg.mutFreq, cfg.popSize, rep)
 
 
 def getStatName(cfg, numIndivs, numLoci):
