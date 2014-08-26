@@ -7,6 +7,7 @@ from Bio.PopGen.GenePop.Controller import GenePopController
 from igrat.genetics.popgen import ne2
 from igrat.genetics.popgen.ne2.Controller import NeEstimator2Controller
 import myUtils
+from myUtils import flt
 
 if len(sys.argv) != 2:
     print "Syntax:", sys.argv[0], "<conffile>"
@@ -68,10 +69,7 @@ def calcStats(numIndivs, numLoci):
             print 'ld',
             for i, ld in enumerate(ldne[gen]):
                 low, high = ldneCI[gen][i]
-                low = low if low is not None else float('inf')
-                ld = ld if ld is not None else float('inf')
-                high = high if high is not None else float('inf')
-                print '%f#%f#%f' % (low, ld, high),
+                print '%f#%f#%f' % (flt(low), flt(ld), flt(high)),
             print
             print 'het',
             for hnb in hetNb[gen]:
@@ -81,6 +79,7 @@ def calcStats(numIndivs, numLoci):
 
 def calcTemporalStats(numIndivs, numLoci):
     crits = [0.05, 0.02, 0.01, 0]
+    print 'temp'
     print ' '.join([str(x) for x in crits])
     for rep in range(cfg.reps):
         for ref in cfg.refGens:
@@ -100,13 +99,13 @@ def calcTemporalStats(numIndivs, numLoci):
                         print method,
                         for crit in results:
                             print '%.1f#%.1f#%.1f' % (
-                                crit['ParaTemp'][0], crit['Ne'],
-                                crit['ParaTemp'][1]),
+                                flt(crit['ParaTemp'][0]), flt(crit['Ne']),
+                                flt(crit['ParaTemp'][1])),
                     print
 
 stdout = sys.stdout
 for numIndivs, numLoci in cfg.sampleStrats:
     sys.stdout = open(myUtils.getStatName(cfg, numIndivs, numLoci), "w")
-    #calcStats(numIndivs, numLoci)
+    calcStats(numIndivs, numLoci)
     calcTemporalStats(numIndivs, numLoci)
 sys.stdout = stdout

@@ -15,7 +15,7 @@ oExpr = {
 def flt(x):
     try:
         return float(x)
-    except ValueError:
+    except:
         return float("inf")
 
 
