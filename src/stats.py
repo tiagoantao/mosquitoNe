@@ -80,67 +80,33 @@ def calcStats(numIndivs, numLoci):
 
 
 def calcTemporalStats(numIndivs, numLoci):
-    blocks = myUtils.getBlocks(cfg)
     crits = [0.05, 0.02, 0.01, 0]
     print ' '.join([str(x) for x in crits])
     for rep in range(cfg.reps):
-        fname = myUtils.getConc(cfg, numIndivs, numLoci, rep)
-        tempName = "xaxa%d" % os.getpid()
-        coanc = {}
-        ldne = {}
-        ldneCI = {}
-        hetNb = {}
-        temp = []
-        for i in range(len(blocks)):
-            gens = blocks[i]
-            shutil.copyfile(fname + "-" + str(i), tempName)
-            ne2c.run_neestimator2('.', tempName, '.', tempName + '.out',
-                                  crits=crits,
-                                  LD=True, hets=True, coanc=True,
-                                  temp=gens)
-            ldout = open(tempName + '.out')
-            rec = ne2.parse(ldout)
-            for j in range(len(gens)):
-                if gens[j] in cfg.futureGens:
-                    coanc[gens[j]] = rec.coanc[j]["EstNeb"]
-                    ldne[gens[j]] = [rec.ld[j][c]["EstNe"] for c in
-                                     range(len(rec.ld[j]))]
-                    ldneCI[gens[j]] = [rec.ld[j][c]["ParaNe"] for c in
-                                       range(len(rec.ld[j]))]
-                    hetNb[gens[j]] = [rec.het[j][c]["EstNeb"] for c in
-                                      range(len(rec.het[j]))]
-            for tmp in rec.temporal:
-                temp.append(tmp)
-        for gen in cfg.futureGens:
-            print rep, gen
-            print 'coanc',
-            print coanc[gen]
-            print 'ld',
-            for i, ld in enumerate(ldne[gen]):
-                low, high = ldneCI[gen][i]
-                low = low if low is not None else float('inf')
-                ld = ld if ld is not None else float('inf')
-                high = high if high is not None else float('inf')
-                print '%f#%f#%f' % (low, ld, high),
-            print
-            print 'het',
-            for hnb in hetNb[gen]:
-                print hnb,
-            print
-        for tmp in temp:
-            g1 = tmp["generation1"]
-            g2 = tmp["generation2"]
-            if g1 in cfg.refGens and g2 in cfg.futureGens:
-                pl = tmp["results"]["Pollak"]
-                jr = tmp["results"]["Jorde/Ryman"]
-                nt = tmp["results"]["Nei/Tajima"]
-                print rep, "temp", g1, g2,
-                print "#".join([str(pl[c]["Ne"]) for c in range(len(pl))]),
-                print "#".join([str(jr[c]["Ne"]) for c in range(len(pl))]),
-                print "#".join([str(nt[c]["Ne"]) for c in range(len(pl))])
+        for ref in cfg.refGens:
+            for gen in cfg.futureGens:
+                gens = [(ref, gen)]
+                fname = myUtils.getConc(cfg, numIndivs, numLoci, rep)
+                tempName = "xaxa%d" % os.getpid()
+                for me in cfg.futureGens:
+                    shutil.copyfile('%s-%d-%d' % (fname, ref, me), tempName)
+                    ne2c.run_neestimator2('.', tempName, '.', tempName + '.out',
+                                          LD=False, crits=crits, temp=gens)
+                    ldout = open(tempName + '.out')
+                    rec = ne2.parse(ldout)
+                    print rep, ref, me,
+                    case = rec.temporal[0]
+                    for method, results in case['results'].items():
+                        print method,
+                        for crit in results:
+                            print '%.1f#%.1f#%.1f' % (
+                                crit['ParaTemp'][0], crit['Ne'],
+                                crit['ParaTemp'][1]),
+                    print
 
 stdout = sys.stdout
 for numIndivs, numLoci in cfg.sampleStrats:
     sys.stdout = open(myUtils.getStatName(cfg, numIndivs, numLoci), "w")
-    calcStats(numIndivs, numLoci)
+    #calcStats(numIndivs, numLoci)
+    calcTemporalStats(numIndivs, numLoci)
 sys.stdout = stdout

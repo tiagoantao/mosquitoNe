@@ -48,14 +48,15 @@ for numIndivs, numLoci in cfg.sampleStrats:
                 wname = myUtils.getConc(cfg, numIndivs, numLoci, rep)
                 w = open('%s-%d-%d' % (wname, ref, me), "w")
                 w.write("conc\n")
-                w.write(''.join(begin[1:numLoci + 1]))
+                #w.write(''.join(begin[1:numLoci + 1]))
+                w.write(''.join(begin[1:]))
                 name = myUtils.getExpr(cfg, numIndivs, numLoci, gen, rep, True)
                 f = open(name)
                 onPop = False
                 i = 0
                 for l in f:
                     if onPop:
-                        w.write(begin[numLoci + i + 2])
+                        #w.write(begin[numLoci + i + 2])
                         w.write('t' + l)
                         i += 1
                     elif l.startswith("Pop"):
