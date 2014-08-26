@@ -1,10 +1,13 @@
 import math
 import sys
 
-import pylab
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
 from scipy import stats
 
 import myUtils
+from myUtils import flt
 
 if len(sys.argv) != 2:
     print "Syntax:", sys.argv[0], "<conffile>"
@@ -17,37 +20,75 @@ cfg = myUtils.getConfig(sys.argv[1])
 LD = {}
 coanc = {}
 het = {}
+temp1 = {}
+temp2 = {}
 ys = []
-for t in range(cfg.seasonGen, cfg.gens):
+for t in cfg.futureGens:
     y = cfg.A * math.cos(2 * math.pi * (t - cfg.seasonGen) / cfg.T) + cfg.B
     LD[t] = []
     coanc[t] = []
     het[t] = []
+    temp1[t] = []
+    temp2[t] = []
     ys.append(y)
     #print t, y
 
-for numIndivs, numLoci in cfg.sampleStrats:
-    fname = myUtils.getStatName(cfg, numIndivs, numLoci)
-    for rec in myUtils.getStat(open(fname)):
-        if rec["type"] == "temp":
-            print rec.keys(), rec["g1"], rec["g2"], rec["Pollak"]
-            continue
-        LD[rec["gen"]].append(rec["LD"][0])
-        het[rec["gen"]].append(rec["Het"][-1])
-        coanc[rec["gen"]].append(rec["coanc"])
+numIndivs, numLoci = 60, 20
+fname = myUtils.getStatName(cfg, numIndivs, numLoci)
+f = open(fname)
+f.readline()
+l = f.readline()
+while l != 'temp\n':
+    rep, gen = l.rstrip().split(' ')
+    rep = int(rep)
+    gen = int(gen)
+    l = f.readline()
+    toks = l.rstrip().split(' ')
+    coanc[gen].append(flt(toks[1]))
+    l = f.readline()
+    toks = l.rstrip().split(' ')
+    stat = toks[2].split('#')  # careful with pcrit
+    LD[gen].append(flt(stat[1]))
+    l = f.readline()
+    toks = l.rstrip().split(' ')
+    het[gen].append(flt(toks[1]))  # pcrit...
+    l = f.readline()
+f.readline()  # pcrit spec
+l = f.readline()
+while l != '':
+    toks = l.rstrip().split(' ')
+    ref = int(toks[1])
+    if ref == 50:
+        mytemp = temp1
+    elif ref == 56:
+        mytemp = temp2
+    else:
+        l = f.readline()
+        continue
+    gen = int(toks[2])
+    stat = toks[4].split('#')  # careful with pcrit
+    mytemp[gen].append(flt(stat[1]))
+    l = f.readline()
 
 xs = LD.keys()
 xs.sort()
 lds = []
 coancs = []
 hets = []
+temp1s = []
+temp2s = []
+fig, ax = plt.subplots()
 for x in xs:
     lds.append(stats.hmean([v if v >= 0 else 100000 for v in LD[x]]))
     coancs.append(stats.hmean([v if v >= 0 else 100000 for v in coanc[x]]))
     hets.append(stats.hmean([v if v >= 0 else 100000 for v in het[x]]))
-pylab.plot(xs, ys, label="Nc")
-pylab.plot(xs, lds, label="LD")
-pylab.plot(xs, coancs, label="Coanc")
-pylab.plot(xs, hets, label="Het")
-pylab.legend()
-pylab.show()
+    temp1s.append(stats.hmean([v if v >= 0 else 100000 for v in temp1[x]]))
+    temp2s.append(stats.hmean([v if v >= 0 else 100000 for v in temp2[x]]))
+ax.plot(xs, ys, label="Nc")
+ax.plot(xs, lds, label="LD")
+ax.plot(xs, coancs, label="Coanc")
+ax.plot(xs, hets, label="Het")
+ax.plot(xs, temp1s, label="temp1")
+ax.plot(xs, temp2s, label="temp2")
+ax.legend()
+fig.savefig('wave.png')
