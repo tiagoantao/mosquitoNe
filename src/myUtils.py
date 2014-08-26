@@ -97,26 +97,28 @@ def getConc(cfg, numIndivs, numLoci, rep):
 
 def getStatName(cfg, numIndivs, numLoci):
     if cfg.demo == "constant":
-        return "con-%d-%d-%d.txt" % (numIndivs, numLoci, cfg.popSize)
+        return "samp/con-%d-%d-%d.txt" % (numIndivs, numLoci, cfg.popSize)
     elif cfg.demo == "season":
-        return "ses-%d-%d-%d-%d-%d-%d.txt" % (numIndivs, numLoci,
-                                              cfg.popSize, cfg.A,
-                                              cfg.B, cfg.T)
+        return "samp/ses-%d-%d-%d-%d-%d-%d.txt" % (numIndivs, numLoci,
+                                                   cfg.popSize, cfg.A,
+                                                   cfg.B, cfg.T)
     elif cfg.demo == "bottle":
-        return "ses-%d-%d-%d-%d-%d.txt" % (numIndivs, numLoci,
-                                           cfg.popSize, cfg.bottleGen,
-                                           cfg.popSize2)
+        return "samp/bot-%d-%d-%d-%d-%d.txt" % (numIndivs, numLoci,
+                                                cfg.popSize, cfg.bottleGen,
+                                                cfg.popSize2)
 
 
 def getStat(f):
+    l = f.readline()  # pcrits
     l = f.readline()
     while l != "":
+        rep, gen = tuple([int(x) for x in l.rstrip().split(' ')])
         rec = {}
-        l = l.rstrip()
+        l = l.readline().rstrip()
+        rec["rep"] = rep
         if l.find("temp") > -1:
             toks = l.split(" ")
             rec["type"] = "temp"
-            rec["rep"] = int(toks[0])
             rec["g1"] = int(toks[2])
             rec["g2"] = int(toks[3])
             rec["Pollak"] = [flt(x) for x in toks[4].split("#")]
@@ -126,25 +128,16 @@ def getStat(f):
         else:
             toks = l.split(" ")
             rec["type"] = "notemp"
-            rec["rep"] = int(toks[0])
-            rec["gen"] = int(toks[1])
-            rec["coanc"] = flt(toks[2])
-            rec["LD"] = [flt(x) for x in f.readline().split(" ")]
-            rec["Het"] = [flt(x) for x in f.readline().split(" ")]
+            rec["gen"] = gen
+            rec["coanc"] = flt(toks[1])
+            toks = f.readline().rstrip().split(' ')
+            rec['LD'] = []
+            for tok in toks[1:]:
+                ld_case = tok.split('#')
+                rec['LD'].append((flt(ld_case[0]), flt(ld_case[1]),
+                                  flt(ld_case[2])))
+            toks = f.readline().rstrip().split(' ')
+            rec["Het"] = [flt(x) for x in toks[1]]
             yield rec
         l = f.readline()
     f.close()
-
-
-def getBlocks(cfg):
-    blocks = []
-    gensToDo = list(cfg.futureGens)
-    currBlock = list(cfg.refGens)
-    blocks.append(currBlock)
-    while len(gensToDo) > 0:
-        if len(currBlock) == 10:
-            currBlock = list(cfg.refGens)
-            blocks.append(currBlock)
-        currBlock.append(gensToDo[0])
-        del gensToDo[0]
-    return blocks

@@ -43,18 +43,59 @@ def median(list):
 
 
 def calcStats(numIndivs, numLoci):
-    blocks = myUtils.getBlocks(cfg)
+    crits = [0.05, 0.02, 0.01, 0]
+    print ' '.join([str(x) for x in crits])
     for rep in range(cfg.reps):
         fname = myUtils.getConc(cfg, numIndivs, numLoci, rep)
         tempName = "xaxa%d" % os.getpid()
         coanc = {}
         ldne = {}
+        ldneCI = {}
+        hetNb = {}
+        shutil.copyfile(fname, tempName)
+        ne2c.run_neestimator2('.', tempName, '.', tempName + '.out',
+                              crits=crits, LD=True, hets=True, coanc=True)
+        ldout = open(tempName + '.out')
+        rec = ne2.parse(ldout)
+        for j, gen in enumerate(cfg.futureGens):
+            coanc[gen] = rec.coanc[j]["EstNeb"]
+            ldne[gen] = [rec.ld[j][c]["EstNe"] for c in range(len(rec.ld[j]))]
+            ldneCI[gen] = [rec.ld[j][c]["ParaNe"] for c in range(len(rec.ld[j]))]
+            hetNb[gen] = [rec.het[j][c]["EstNeb"] for c in range(len(rec.het[j]))]
+            print rep, gen
+            print 'coanc',
+            print coanc[gen]
+            print 'ld',
+            for i, ld in enumerate(ldne[gen]):
+                low, high = ldneCI[gen][i]
+                low = low if low is not None else float('inf')
+                ld = ld if ld is not None else float('inf')
+                high = high if high is not None else float('inf')
+                print '%f#%f#%f' % (low, ld, high),
+            print
+            print 'het',
+            for hnb in hetNb[gen]:
+                print hnb,
+            print
+
+
+def calcTemporalStats(numIndivs, numLoci):
+    blocks = myUtils.getBlocks(cfg)
+    crits = [0.05, 0.02, 0.01, 0]
+    print ' '.join([str(x) for x in crits])
+    for rep in range(cfg.reps):
+        fname = myUtils.getConc(cfg, numIndivs, numLoci, rep)
+        tempName = "xaxa%d" % os.getpid()
+        coanc = {}
+        ldne = {}
+        ldneCI = {}
         hetNb = {}
         temp = []
         for i in range(len(blocks)):
             gens = blocks[i]
             shutil.copyfile(fname + "-" + str(i), tempName)
             ne2c.run_neestimator2('.', tempName, '.', tempName + '.out',
+                                  crits=crits,
                                   LD=True, hets=True, coanc=True,
                                   temp=gens)
             ldout = open(tempName + '.out')
@@ -64,16 +105,25 @@ def calcStats(numIndivs, numLoci):
                     coanc[gens[j]] = rec.coanc[j]["EstNeb"]
                     ldne[gens[j]] = [rec.ld[j][c]["EstNe"] for c in
                                      range(len(rec.ld[j]))]
+                    ldneCI[gens[j]] = [rec.ld[j][c]["ParaNe"] for c in
+                                       range(len(rec.ld[j]))]
                     hetNb[gens[j]] = [rec.het[j][c]["EstNeb"] for c in
                                       range(len(rec.het[j]))]
             for tmp in rec.temporal:
                 temp.append(tmp)
         for gen in cfg.futureGens:
-            print rep, gen,
+            print rep, gen
+            print 'coanc',
             print coanc[gen]
-            for ld in ldne[gen]:
-                print ld,
+            print 'ld',
+            for i, ld in enumerate(ldne[gen]):
+                low, high = ldneCI[gen][i]
+                low = low if low is not None else float('inf')
+                ld = ld if ld is not None else float('inf')
+                high = high if high is not None else float('inf')
+                print '%f#%f#%f' % (low, ld, high),
             print
+            print 'het',
             for hnb in hetNb[gen]:
                 print hnb,
             print

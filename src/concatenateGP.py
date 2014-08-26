@@ -13,28 +13,52 @@ except OSError:
 
 cfg = myUtils.getConfig(model)
 popSize = cfg.popSize
-blocks = myUtils.getBlocks(cfg)
 
+# for non-temporal
 for numIndivs, numLoci in cfg.sampleStrats:
     for rep in range(cfg.reps):
-        for i in range(len(blocks)):
-            wname = myUtils.getConc(cfg, numIndivs, numLoci, rep)
-            w = open(wname + "-" + str(i), "w")
-            onFirst = True
-            w.write("conc\n")
-            gens = set(blocks[i])
-            gens = list(gens)
-            gens.sort()
-            for gen in gens:
+        wname = myUtils.getConc(cfg, numIndivs, numLoci, rep)
+        w = open(wname, "w")
+        w.write("conc\n")
+        gens = cfg.futureGens
+        gens.sort()
+        onFirst = True
+        for gen in gens:
+            name = myUtils.getExpr(cfg, numIndivs, numLoci, gen, rep, True)
+            f = open(name)
+            sendOut = False
+            f.readline()
+            for l in f:
+                if sendOut or onFirst:
+                    w.write(l)
+                elif l.startswith("Pop"):
+                    w.write(l)
+                    sendOut = True
+            onFirst = False
+        w.close()
+
+# for temporal
+for numIndivs, numLoci in cfg.sampleStrats:
+    for rep in range(cfg.reps):
+        for ref in cfg.refGens:
+            rname = myUtils.getExpr(cfg, numIndivs, numLoci, ref, rep, True)
+            f = open(rname)
+            begin = f.readlines()
+            for me in cfg.futureGens:
+                wname = myUtils.getConc(cfg, numIndivs, numLoci, rep)
+                w = open('%s-%d-%d' % (wname, ref, me), "w")
+                w.write("conc\n")
+                w.write(''.join(begin[1:numLoci + 1]))
                 name = myUtils.getExpr(cfg, numIndivs, numLoci, gen, rep, True)
                 f = open(name)
-                sendOut = False
-                f.readline()
+                onPop = False
+                i = 0
                 for l in f:
-                    if sendOut or onFirst:
-                        w.write(l)
+                    if onPop:
+                        w.write(begin[numLoci + i + 2])
+                        w.write('t' + l)
+                        i += 1
                     elif l.startswith("Pop"):
                         w.write(l)
-                        sendOut = True
-                onFirst = False
+                        onPop = True
             w.close()
