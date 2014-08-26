@@ -4,8 +4,10 @@ import ConfigParser
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
+from scipy import stats
 
 import myUtils
+from myUtils import flt
 
 if len(sys.argv) not in [2]:
     print "syntax: %s <plotconfig>" % sys.argv[0]
@@ -21,8 +23,6 @@ def getPlotConfig(fName):
 
 
 ncs, spans, sampleStrats = getPlotConfig(sys.argv[1])
-numCols = len(ncs)
-numRows = len(spans)
 
 
 def doPlot(ax, nc, sampleStrat, startCol, endRow):
@@ -54,12 +54,15 @@ def doPlot(ax, nc, sampleStrat, startCol, endRow):
             continue
         stat = toks[6].split('#')  # Pollak 0.01
         high[dist - 1].append(stat[0])
-        point[dist - 1].append(stat[1])
+        point[dist - 1].append(flt(stat[1]))
         low[dist - 1].append(stat[2])
         l = f.readline()
-    ax.boxplot(sampRes)
+    ax.plot([stats.hmean([[y if y > 0 else 100000 for y in x] for x in
+                          point])])
 
 plt.ioff()
+numCols = len(ncs)
+numRows = len(sampleStrats)
 for col in range(len(ncs)):
     for row in range(len(sampleStrats)):
         ax = plt.subplot(numRows, numCols, col * numRows + row + 1)
