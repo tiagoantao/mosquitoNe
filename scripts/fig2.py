@@ -57,16 +57,22 @@ def doPlot(ax, nc, sampleStrat, startCol, endRow):
         point[dist - 1].append(flt(stat[1]))
         low[dist - 1].append(flt(stat[2]))
         l = f.readline()
-    ax.plot([stats.hmean([y if y > 0 else 100000 for y in x]) for x in
-                          high])
-    ax.plot([stats.hmean([y if y > 0 else 100000 for y in x]) for x in
-                          point])
+    ax.plot([stats.hmean([y if y > 0 else 100000 for y in x]) for x in high])
+    ax.plot([stats.hmean([y if y > 0 else 100000 for y in x]) for x in point])
+    ax.plot([stats.hmean([y if y > 0 else 100000 for y in x]) for x in low])
+    ax.set_ylim(0, 2 * nc)
+    ax.get_yaxis().set_ticks([nc // 2, nc, 3 * nc // 2, 2 * nc])
+    if not startCol:
+        ax.set_yticklabels(['', '', '', ''])
+    if endRow:
+        ax.set_xticklabels([str(sampleStrat) for sampleStrat in sampleStrats])
 
 plt.ioff()
-numCols = len(ncs)
-numRows = len(sampleStrats)
-for col in range(len(ncs)):
-    for row in range(len(sampleStrats)):
-        ax = plt.subplot(numRows, numCols, col * numRows + row + 1)
-        doPlot(ax, ncs[col], sampleStrats[row], col == 0, row == numRows)
+numCols = len(sampleStrats)
+numRows = len(ncs)
+fig, axs = plt.subplots(numRows, numCols, sharex=True, figsize=(16, 9))
+for col in range(len(sampleStrats)):
+    for row in range(len(ncs)):
+        ax = axs[row, col]
+        doPlot(ax, ncs[row], sampleStrats[col], col == 0, row == numRows)
 plt.savefig('fig2.png')

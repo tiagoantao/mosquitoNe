@@ -5,6 +5,8 @@ import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
+import seaborn as sns
+
 import myUtils
 
 if len(sys.argv) not in [2]:
@@ -21,8 +23,6 @@ def getPlotConfig(fName):
 
 
 ncs, spans, sampleStrats = getPlotConfig(sys.argv[1])
-numCols = len(ncs)
-numRows = len(spans)
 
 
 def doPlot(ax, nc, span, startCol, endRow):
@@ -42,20 +42,31 @@ def doPlot(ax, nc, span, startCol, endRow):
         l = f.readline()
         while l != "":
             toks = l.rstrip().split(" ")
-            rep = int(toks[0])
+            #rep = int(toks[0])
             ref = int(toks[1])
             gen = int(toks[2])
             if gen - ref != span:
                 l = f.readline()
                 continue
-            stat = toks[6].split('#')  # Pollak 0.01
-            sampRes[-1].append(float(stat[1]))
+            stat = toks[-1].split('#')  # Pollak 0+
+            val = float(stat[1])
+            sampRes[-1].append([val if val > 0 else 100000])
             l = f.readline()
-    ax.boxplot(sampRes)
+    sns.boxplot(sampRes, notch=0, sym='', ax=ax)
+    ax.set_ylim(0, 2 * nc)
+    ax.get_yaxis().set_ticks([nc // 2, nc, 3 * nc // 2, 2 * nc])
+    if not startCol:
+        ax.set_yticklabels(['', '', '', ''])
+    if endRow:
+        ax.set_xticklabels([str(sampleStrat) for sampleStrat in sampleStrats])
 
 plt.ioff()
-for col in range(len(ncs)):
-    for row in range(len(spans)):
-        ax = plt.subplot(numRows, numCols, col * numRows + row + 1)
-        doPlot(ax, ncs[col], spans[row], col == 0, row == numRows)
+numCols = len(spans)
+numRows = len(ncs)
+fig, axs = plt.subplots(numRows, numCols, sharex=True, figsize=(16, 9))
+for col in range(len(spans)):
+    for row in range(len(ncs)):
+        ax = axs[row, col]
+        doPlot(ax, ncs[row], spans[col], col == 0, row == numRows - 1)
+fig.tight_layout(h_pad=-0.5, w_pad=-0.75)
 plt.savefig('fig1.png')
