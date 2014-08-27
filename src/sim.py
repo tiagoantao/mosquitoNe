@@ -87,14 +87,14 @@ def getSeasonFun(initialPop, genStart, A, B, T):
     return getSeasonFun
 
 
-def getBottleFun(initialPop, genBottle, smallPop):
-    def getBottleFun(pop):
+def getDeclineFun(initialPop, declineGen, smallPop):
+    def getDeclineFun(pop):
         gen = pop.dvars().gen
-        if gen < genBottle:
+        if gen < declineGen:
             return initialPop
         else:
             return smallPop
-    return getBottleFun
+    return getDeclineFun
 
 
 for sampleStrat in cfg.sampleStrats:
@@ -102,8 +102,8 @@ for sampleStrat in cfg.sampleStrats:
     numLoci = sampleStrat[1]
     acum = os.getcwd()
     deepDirs = ['samp', "%f" % cfg.mutFreq, numIndivs, numLoci]
-    if cfg.demo == "bottle":
-        deepDirs.insert(1, "bot")
+    if cfg.demo == "decline":
+        deepDirs.insert(1, "decl")
     elif cfg.demo == "recover":
         deepDirs.insert(1, "rec")
     elif cfg.demo == "season":
@@ -126,11 +126,10 @@ elif cfg.demo == "season":
     mateOp = sp.RandomMating(subPopSize=getSeasonFun(cfg.popSize,
                                                      cfg.seasonGen,
                                                      cfg.A, cfg.B, cfg.T))
-elif cfg.demo == "bottle":
-    mateOp = sp.RandomMating(subPopSize=getSeasonFun(cfg.popSize,
-                                                     cfg.seasonGen,
-                                                     cfg.bottleGen,
-                                                     cfg.popSize2))
+elif cfg.demo == "decline":
+    mateOp = sp.RandomMating(subPopSize=getDeclineFun(cfg.popSize,
+                                                      cfg.declineGen,
+                                                      cfg.declineSize))
 
 reportOps = [
     sp.PyOperator(func=saver, param=oExpr, at=cfg.saveGens),

@@ -8,7 +8,7 @@ etcConf = sysDir + "/etc.conf"
 oExpr = {
     "constant": '"samp/%f/%%d/%%d/smp-%d-%%d-%%d.txt" %% ',
     "season":   '"samp/ses/%f/%%d/%%d/smp-%d-%d-%d-%d-%%d-%%d.txt" %% ',
-    "bot":      '"samp/bot/%f/%%d/%%d/smp-%d-%d-%d-%%d-%%d.txt" %% ',
+    "decline":  '"samp/decl/%f/%%d/%%d/smp-%d-%d-%d-%%d-%%d.txt" %% ',
 }
 
 
@@ -39,7 +39,7 @@ def getConfig(fName):
     cfg.demo = config.get("pop", "demo")
     if cfg.demo == "constant":
         cfg.popSize = config.getint("pop", "popSize")
-    if cfg.demo == "season":
+    elif cfg.demo == "season":
         cfg.popSize = config.getint("pop", "popSize")
         cfg.seasonGen = config.getint("pop", "seasonGen")
         cfg.A = config.getint("pop", "A")
@@ -48,6 +48,10 @@ def getConfig(fName):
             cfg.T = config.getint("pop", "T")
         except ConfigParser.NoOptionError:
             cfg.T = 12
+    elif cfg.demo == "decline":
+        cfg.popSize = config.getint("pop", "popSize")
+        cfg.declineGen = config.getint("pop", "declineGen")
+        cfg.declineSize = config.getint("pop", "declineSize")
 
     cfg.startAlleles = config.getint("genome", "startAlleles")
     cfg.mutFreq = config.getfloat("genome", "mutFreq")
@@ -68,10 +72,10 @@ def getExpr(cfg, numIndivs, numLoci, gen, rep, doeval=False):
         rExpr = (oExpr[cfg.demo] +
                  '(numIndivs, numLoci, gen, rep)') % (
                      cfg.mutFreq, cfg.popSize, cfg.A, cfg.B, cfg.T)
-    elif cfg.demo == "bottle":
+    elif cfg.demo == "decline":
         rExpr = (oExpr[cfg.demo] +
                  '(numIndivs, numLoci, gen, rep)') % (
-                     cfg.mutFreq, cfg.popSize, cfg.bottleGen, cfg.popSize2)
+                     cfg.mutFreq, cfg.popSize, cfg.declineGen, cfg.declineSize)
     elif cfg.demo == "constant":
         rExpr = (oExpr[cfg.demo] +
                  '(numIndivs, numLoci, gen, rep)') % (cfg.mutFreq, cfg.popSize)
@@ -86,10 +90,10 @@ def getConc(cfg, numIndivs, numLoci, rep):
         return "samp/conc/ses-%d-%d-%f-%d-%d-%d-%d-%d.txt" % (
             numIndivs, numLoci, cfg.mutFreq, cfg.popSize,
             cfg.A, cfg.B, cfg.T, rep)
-    elif cfg.demo == "bottle":
-        return "samp/conc/bot-%d-%d-%f-%d-%d-%d-%d.txt" % (
+    elif cfg.demo == "decline":
+        return "samp/conc/decl-%d-%d-%f-%d-%d-%d-%d.txt" % (
             numIndivs, numLoci, cfg.mutFreq, cfg.popSize,
-            cfg.bottleGen, cfg.popSize2, rep)
+            cfg.declineGen, cfg.declineSize, rep)
     elif cfg.demo == "constant":
         return "samp/conc/con-%d-%d-%f-%d-%d.txt" % (
             numIndivs, numLoci, cfg.mutFreq, cfg.popSize, rep)
@@ -102,10 +106,10 @@ def getStatName(cfg, numIndivs, numLoci):
         return "samp/ses-%d-%d-%d-%d-%d-%d.txt" % (numIndivs, numLoci,
                                                    cfg.popSize, cfg.A,
                                                    cfg.B, cfg.T)
-    elif cfg.demo == "bottle":
-        return "samp/bot-%d-%d-%d-%d-%d.txt" % (numIndivs, numLoci,
-                                                cfg.popSize, cfg.bottleGen,
-                                                cfg.popSize2)
+    elif cfg.demo == "decline":
+        return "samp/decl-%d-%d-%d-%d-%d.txt" % (numIndivs, numLoci,
+                                                 cfg.popSize, cfg.declineGen,
+                                                 cfg.declineSize)
 
 
 def getStat(f):
