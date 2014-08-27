@@ -53,12 +53,14 @@ def doPlot(ax, nc, sampleStrat, startCol, endRow):
             l = f.readline()
             continue
         stat = toks[6].split('#')  # Pollak 0.01
-        high[dist - 1].append(stat[0])
+        high[dist - 1].append(flt(stat[0]))
         point[dist - 1].append(flt(stat[1]))
-        low[dist - 1].append(stat[2])
+        low[dist - 1].append(flt(stat[2]))
         l = f.readline()
-    ax.plot([stats.hmean([[y if y > 0 else 100000 for y in x] for x in
-                          point])])
+    ax.plot([stats.hmean([y if y > 0 else 100000 for y in x]) for x in
+                          high])
+    ax.plot([stats.hmean([y if y > 0 else 100000 for y in x]) for x in
+                          point])
 
 plt.ioff()
 numCols = len(ncs)

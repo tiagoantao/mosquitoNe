@@ -50,7 +50,7 @@ for numIndivs, numLoci in cfg.sampleStrats:
                 w.write("conc\n")
                 #w.write(''.join(begin[1:numLoci + 1]))
                 w.write(''.join(begin[1:]))
-                name = myUtils.getExpr(cfg, numIndivs, numLoci, gen, rep, True)
+                name = myUtils.getExpr(cfg, numIndivs, numLoci, me, rep, True)
                 f = open(name)
                 onPop = False
                 i = 0
