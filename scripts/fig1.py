@@ -49,7 +49,7 @@ def doPlot(ax, nc, span, startCol, endRow):
             if gen - ref != span:
                 l = f.readline()
                 continue
-            stat = toks[-1].split('#')  # Pollak 0+
+            stat = toks[-3].split('#')  # Pollak 0.02
             val = float(stat[1])
             sampRes[-1].append([val if val > 0 else 100000])
             l = f.readline()

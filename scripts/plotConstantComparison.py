@@ -48,7 +48,7 @@ def plotComparison(ax, nc, sampleStrat, startCol, endRow):
         #coanc[gen].append(flt(toks[1]))
         l = f.readline()
         toks = l.rstrip().split(' ')
-        stat = toks[2].split('#')  # careful with pcrit
+        stat = toks[3].split('#')  # careful with pcrit
         LD[gen].append(flt(stat[1]))
         l = f.readline()
         #toks = l.rstrip().split(' ')
@@ -67,13 +67,14 @@ def plotComparison(ax, nc, sampleStrat, startCol, endRow):
         if dist not in spans:
             l = f.readline()
             continue
-        stat = toks[-1].split('#')  # careful with pcrit
+        stat = toks[-3].split('#')  # careful with pcrit
         mytemp[dist].append(flt(stat[1]))
         l = f.readline()
     sns.boxplot([mytemp[span] for span in spans] + [[LD[cfg.futureGens[0]]]],
                 sym='', ax=ax)
     ax.set_ylim(0, 2 * nc)
     ax.get_yaxis().set_ticks([nc // 2, nc, 3 * nc // 2, 2 * nc])
+    ax.axhline(nc)
     if not startCol:
         ax.set_yticklabels(['', '', '', ''])
     if endRow:
@@ -88,5 +89,12 @@ for row in range(len(ncs)):
         ax = axs[row, col]
         plotComparison(ax, ncs[row], sampleStrats[col], col == 0, row ==
                        numRows - 1)
+        if row == 0:
+            ymin, ymax = ax.get_ylim()
+            xmin, xmax = ax.get_xlim()
+            ni, nl = sampleStrats[col]
+            ax.text((xmax - xmin) / 2, ymax, 'I = %d, L = %d' % (ni, nl),
+                    va='bottom', ha='center')
 fig.tight_layout(h_pad=0, w_pad=0.1)
 fig.savefig('comparison.png')
+fig.savefig('comparison.eps')
