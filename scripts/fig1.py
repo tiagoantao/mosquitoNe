@@ -1,3 +1,4 @@
+from __future__ import division
 import sys
 import ConfigParser
 
@@ -59,6 +60,7 @@ def doPlot(ax, nc, span, startCol, endRow):
         ax.set_yticklabels(['', '', '', ''])
     if endRow:
         ax.set_xticklabels([str(sampleStrat) for sampleStrat in sampleStrats])
+    ax.axhline(nc)
 
 plt.ioff()
 numCols = len(spans)
@@ -68,5 +70,11 @@ for col in range(len(spans)):
     for row in range(len(ncs)):
         ax = axs[row, col]
         doPlot(ax, ncs[row], spans[col], col == 0, row == numRows - 1)
-fig.tight_layout(h_pad=-0.5, w_pad=-0.75)
+        if row == 0:
+            ymin, ymax = ax.get_ylim()
+            xmin, xmax = ax.get_xlim()
+            ax.text((xmax - xmin) / 2, ymax, 'span = %d' % spans[col],
+                    va='bottom', ha='center')
+fig.tight_layout(h_pad=0, w_pad=0.1)
 plt.savefig('fig1.png')
+plt.savefig('fig1.eps')
