@@ -87,21 +87,20 @@ def calcTemporalStats(numIndivs, numLoci):
                 gens = [(ref, gen)]
                 fname = myUtils.getConc(cfg, numIndivs, numLoci, rep)
                 tempName = "xaxa%d" % os.getpid()
-                for me in cfg.futureGens:
-                    shutil.copyfile('%s-%d-%d' % (fname, ref, me), tempName)
-                    ne2c.run_neestimator2('.', tempName, '.', tempName + '.out',
-                                          LD=False, crits=crits, temp=gens)
-                    ldout = open(tempName + '.out')
-                    rec = ne2.parse(ldout)
-                    print rep, ref, me,
-                    case = rec.temporal[0]
-                    for method, results in case['results'].items():
-                        print method,
-                        for crit in results:
-                            print '%.1f#%.1f#%.1f' % (
-                                flt(crit['ParaTemp'][0]), flt(crit['Ne']),
-                                flt(crit['ParaTemp'][1])),
-                    print
+                shutil.copyfile('%s-%d-%d' % (fname, ref, gen), tempName)
+                ne2c.run_neestimator2('.', tempName, '.', tempName + '.out',
+                                      LD=False, crits=crits, temp=gens)
+                ldout = open(tempName + '.out')
+                rec = ne2.parse(ldout)
+                print rep, ref, gen,
+                case = rec.temporal[0]
+                for method, results in case['results'].items():
+                    print method,
+                    for crit in results:
+                        print '%.1f#%.1f#%.1f' % (
+                            flt(crit['ParaTemp'][0]), flt(crit['Ne']),
+                            flt(crit['ParaTemp'][1])),
+                print
 
 stdout = sys.stdout
 for numIndivs, numLoci in cfg.sampleStrats:
