@@ -1,4 +1,7 @@
-import ConfigParser
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
 import os
 
 sysDir = "/".join(os.path.realpath(__file__).split("/")[:-2])
