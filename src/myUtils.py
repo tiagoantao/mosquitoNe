@@ -117,7 +117,27 @@ def getStatName(cfg, numIndivs, numLoci):
 
 def getMLNE(cfg, numIndivs, numLoci):
     if cfg.demo == "constant":
-        yield "samp/con-%d-%d-%d.txt" % (numIndivs, numLoci, cfg.popSize)
+        for rep in range(cfg.reps):
+            for refGen in cfg.refGens:
+                for futureGen in cfg.futureGens:
+                    fname = "bak/mne-simple%d-%d-%d-%d-%d-%d" % (
+                        cfg.popSize, rep, refGen, futureGen,
+                        numIndivs, numLoci)
+                    f = open(fname)
+                    yield (rep, refGen, futureGen,
+                           [float(x)
+                            for x in f.readline().rstrip().split(' ')])
+    elif cfg.demo == "decline":
+        for rep in range(cfg.reps):
+            for refGen in cfg.refGens:
+                for futureGen in cfg.futureGens:
+                    fname = "bak/mne-decl-%d-%d-%d-%d-%d-%d-%d" % (
+                        cfg.popSize, cfg.declineSize, rep, refGen, futureGen,
+                        numIndivs, numLoci)
+                    f = open(fname)
+                    yield (rep, refGen, futureGen,
+                           [float(x)
+                            for x in f.readline().rstrip().split(' ')])
     elif cfg.demo == "season":
         for rep in range(cfg.reps):
             for refGen in cfg.refGens:
@@ -129,10 +149,6 @@ def getMLNE(cfg, numIndivs, numLoci):
                     yield (rep, refGen, futureGen,
                            [float(x)
                             for x in f.readline().rstrip().split(' ')])
-    elif cfg.demo == "decline":
-        yield "samp/decl-%d-%d-%d-%d-%d.txt" % (numIndivs, numLoci,
-                                                cfg.popSize, cfg.declineGen,
-                                                cfg.declineSize)
 
 
 def getStat(f):
