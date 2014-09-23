@@ -1,13 +1,14 @@
 import sys
 import ConfigParser
 
+import numpy as np
+from scipy import stats
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
 import seaborn as sns
 
-from scipy import stats
 
 import myUtils
 from myUtils import flt
@@ -30,6 +31,34 @@ ncs, spans, sampleStrats = getPlotConfig(sys.argv[1])
 
 def doPlot(ax, nc, sampleStrat, startCol):
     numIndivs, numLoci = sampleStrat
+    span = 24
+    high = [[] for x in range(span)]
+    point = [[] for x in range(span)]
+    low = [[] for x in range(span)]
+    mhigh = [[] for x in range(span)]
+    mpoint = [[] for x in range(span)]
+    mlow = [[] for x in range(span)]
+    do_mlne = False
+    if (numIndivs, numLoci) == (60, 20) and nc == 1000:
+        do_mlne = True
+
+        class Cfg:
+            pass
+        cfg = Cfg()  # hard-coded :((((
+        cfg.demo = 'constant'
+        cfg.numIndivs = numIndivs
+        cfg.numLoci = numLoci
+        cfg.popSize = nc
+        cfg.refGens = [20]
+        cfg.futureGens = range(21, 50)
+        cfg.reps = 100
+        for rep, ref, gen, vals in myUtils.getMLNE(cfg, numIndivs, numLoci):
+            dist = gen - ref
+            if dist < span:
+                mlow[dist - 1].append(vals[0])
+                mpoint[dist - 1].append(vals[1])
+                mhigh[dist - 1].append(vals[2])
+
     sampRes = []
     cfg = myUtils.getConfig('simple%d' % nc)
     sampRes.append([])
@@ -42,10 +71,6 @@ def doPlot(ax, nc, sampleStrat, startCol):
         l = f.readline()
     f.readline()  # pcrits
     l = f.readline()
-    span = 24
-    high = [[] for x in range(span)]
-    point = [[] for x in range(span)]
-    low = [[] for x in range(span)]
     while l != "":
         toks = l.rstrip().split(" ")
         #rep = int(toks[0])
@@ -60,11 +85,19 @@ def doPlot(ax, nc, sampleStrat, startCol):
         point[dist - 1].append(flt(stat[1]))
         low[dist - 1].append(flt(stat[2]))
         l = f.readline()
-    ax.plot([stats.hmean([y if y > 0 else 100000 for y in x]) for x in high])
-    ax.plot([stats.hmean([y if y > 0 else 100000 for y in x]) for x in point])
-    ax.plot([stats.hmean([y if y > 0 else 100000 for y in x]) for x in low])
-    ax.set_ylim(0, 2 * nc)
-    ax.get_yaxis().set_ticks([nc // 2, nc, 3 * nc // 2, 2 * nc])
+    ax.plot([None] + [np.median([y if y > 0 else 100000 for y in x]) for x in high])
+    ax.plot([None] + [np.median([y if y > 0 else 100000 for y in x]) for x in point],
+            'k')
+    ax.plot([None] + [np.median([y if y > 0 else 100000 for y in x]) for x in low])
+    if do_mlne:
+        ax.plot([None] + [np.median([y if y > 0 else 100000 for y in x])
+                 for x in mhigh], 'k-.')
+        ax.plot([None] + [np.median([y if y > 0 else 100000 for y in x])
+                 for x in mpoint], '-.')
+        ax.plot([None] + [np.median([y if y > 0 else 100000 for y in x])
+                 for x in mlow], '-.')
+    ax.set_ylim(0, 3 * nc)
+    ax.get_yaxis().set_ticks([nc // 2, nc, 3 * nc // 2, 2 * nc, 3 * nc])
     ax.axhline(nc)
     ax.set_xlim(0, len(point))
     if not startCol:
