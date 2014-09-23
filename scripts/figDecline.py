@@ -147,3 +147,4 @@ for row in range(numRows):
     #ax = axs[row, 1]
     #doCI(ax, ncs[row], row == numRows - 1)
 plt.savefig('decline.png')
+plt.savefig('decline.eps')
