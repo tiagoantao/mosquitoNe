@@ -3,7 +3,6 @@ from collections import defaultdict
 #import ConfigParser
 
 import numpy as np
-from scipy import stats
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
@@ -13,29 +12,29 @@ from myUtils import flt
 
 ncs = [5000, 2000, 1000]
 numIndivs = 60
-numLoci = 20
+numLoci = 50
 
 
 def doCI(ax, nc, last_row):
     cfg = myUtils.getConfig('decl-%d-%d' % (nc, nc // 10))
     f = open(myUtils.getStatName(cfg, numIndivs, numLoci))
     l = f.readline()
-    LD = [[], [], []]
+    LD = [[], []]
     l = f.readline()
+    gens = [cfg.declineGen, cfg.declineGen + 9, cfg.declineGen + 10]
     while l != 'temp\n':
         rep, gen = l.rstrip().split(' ')
         rep = int(rep)
         gen = int(gen)
-        if gen not in [cfg.declineGen - 1, cfg.declineGen,
-                       cfg.declineGen + 10]:
+        if gen not in gens:
             l = f.readline()
             l = f.readline()
             l = f.readline()
             l = f.readline()
             continue
-        if gen == cfg.declineGen - 1:
+        if gen == gens[0]:
             p = 0
-        elif gen == cfg.declineGen:
+        elif gen == gens[1]:
             p = 1
         else:
             p = 2
@@ -43,7 +42,8 @@ def doCI(ax, nc, last_row):
         l = f.readline()
         toks = l.rstrip().split(' ')
         stat = toks[2].split('#')  # careful with pcrit
-        LD[p].append((flt(stat[0]), flt(stat[2])))
+        if p != 2:  # We do not need the last result
+            LD[p].append((flt(stat[0]), flt(stat[2])))
         l = f.readline()
         l = f.readline()
     f.readline()  # pcrits
@@ -57,8 +57,7 @@ def doCI(ax, nc, last_row):
             l = f.readline()
             continue
         gen = int(toks[2])
-        if gen not in [cfg.declineGen, cfg.declineGen + 1,
-                       cfg.declineGen + 10]:
+        if gen not in gens:
             l = f.readline()
             continue
         stat = toks[-1].split('#')  # Nei/Tajima 0+
@@ -67,20 +66,22 @@ def doCI(ax, nc, last_row):
     bp_ld = []
     for i in range(len(LD)):
         p = 0 if i == 0 else 1
-        bp_ld.append([np.median([y[p] if y[p] > 0 else 100000
-                                 for y in LD[i]])])
+        bp_ld.append([y[p] if y[p] > 0 else 100000 for y in LD[i]])
     ax.boxplot(bp_ld, sym='')
     ax.set_ylim(0, nc // 5)
 
 
 def doPlot(ax, nc, last_row):
     cfg = myUtils.getConfig('decl-%d-%d' % (nc, nc // 10))
-    if nc == 1000:
-        mdecl = defaultdict(dict)
-        for rep, ref, gen, vals in myUtils.getMLNE(cfg, numIndivs, numLoci):
-            top, point, bot = vals
-            mdecl[ref].setdefault(gen, [])
-            mdecl[ref][gen].append(point)
+    try:
+        if nc == 1000:
+            mdecl = defaultdict(dict)
+            for rep, ref, gen, vals in myUtils.getMLNE(cfg, numIndivs, numLoci):
+                top, point, bot = vals
+                mdecl[ref].setdefault(gen, [])
+                mdecl[ref][gen].append(point)
+    except IOError:
+        pass
     f = open(myUtils.getStatName(cfg, numIndivs, numLoci))
     l = f.readline()
     LD = defaultdict(list)
@@ -139,12 +140,12 @@ def doPlot(ax, nc, last_row):
 
 plt.ioff()
 numRows = len(ncs)
-fig, axs = plt.subplots(numRows, 1, sharex=True, figsize=(16, 9),
+fig, axs = plt.subplots(numRows, 2, figsize=(16, 9),
                         squeeze=False)
 for row in range(numRows):
     ax = axs[row, 0]
     doPlot(ax, ncs[row], row == numRows - 1)
-    #ax = axs[row, 1]
-    #doCI(ax, ncs[row], row == numRows - 1)
+    ax = axs[row, 1]
+    doCI(ax, ncs[row], row == numRows - 1)
 plt.savefig('decline.png')
 plt.savefig('decline.eps')
