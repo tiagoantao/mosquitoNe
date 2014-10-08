@@ -1,5 +1,5 @@
 from collections import defaultdict
-#import sys
+import sys
 #import ConfigParser
 
 import numpy as np
@@ -11,8 +11,8 @@ import myUtils
 from myUtils import flt
 
 ncs = [5000, 2000, 1000]
-numIndivs = 60
-numLoci = 50
+numIndivs = int(sys.argv[1])
+numLoci = int(sys.argv[2])
 
 
 def doCI(ax, nc, last_row):
@@ -147,5 +147,5 @@ for row in range(numRows):
     doPlot(ax, ncs[row], row == numRows - 1)
     ax = axs[row, 1]
     doCI(ax, ncs[row], row == numRows - 1)
-plt.savefig('decline.png')
-plt.savefig('decline.eps')
+plt.savefig('decline-%d-%d.png' % (numIndivs, numLoci))
+plt.savefig('decline-%d-%d.eps' % (numIndivs, numLoci))

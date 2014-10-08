@@ -20,6 +20,15 @@ python src/stats.py simple500
 
 4. Figure plotting:
 decline
-python scripts/figDecline.py
+python scripts/figDecline.py 60 20
+python scripts/figDecline.py 60 50
 wave plot
 python scripts/plotWave.py season-500-700
+
+
+MLNE
+----
+
+1. Run
+python src/mlne_stats.py simple500
+(and all the other models: season-500-700 and decline-1000-100)
