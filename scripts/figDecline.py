@@ -7,6 +7,8 @@ import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
+import seaborn as sns
+
 import myUtils
 from myUtils import flt
 
@@ -15,13 +17,13 @@ numIndivs = int(sys.argv[1])
 numLoci = int(sys.argv[2])
 
 
-def doCI(ax, nc, last_row):
+def doLDNeCI(ax, nc, last_row):
     cfg = myUtils.getConfig('decl-%d-%d' % (nc, nc // 10))
     f = open(myUtils.getStatName(cfg, numIndivs, numLoci))
     l = f.readline()
     LD = [[], []]
     l = f.readline()
-    gens = [cfg.declineGen, cfg.declineGen + 9, cfg.declineGen + 10]
+    gens = [cfg.declineGen, cfg.declineGen + 1, cfg.declineGen + 10]
     while l != 'temp\n':
         rep, gen = l.rstrip().split(' ')
         rep = int(rep)
@@ -46,28 +48,43 @@ def doCI(ax, nc, last_row):
             LD[p].append((flt(stat[0]), flt(stat[2])))
         l = f.readline()
         l = f.readline()
-    f.readline()  # pcrits
-    l = f.readline()
-    tdecl = []
-    while l != "":
-        toks = l.rstrip().split(" ")
-        rep = int(toks[0])
-        ref = int(toks[1])
-        if ref != cfg.refGens[0]:
-            l = f.readline()
-            continue
-        gen = int(toks[2])
-        if gen not in gens:
-            l = f.readline()
-            continue
-        stat = toks[-1].split('#')  # Nei/Tajima 0+
-        tdecl.append((flt(stat[0]), flt(stat[2])))
-        l = f.readline()
     bp_ld = []
     for i in range(len(LD)):
         p = 0 if i == 0 else 1
         bp_ld.append([y[p] if y[p] > 0 else 100000 for y in LD[i]])
-    ax.boxplot(bp_ld, sym='')
+    sns.boxplot(bp_ld, sym='', ax=ax)
+    ax.set_ylim(0, nc // 5)
+
+
+def doTempCI(ax, nc, last_row):
+    cfg = myUtils.getConfig('decl-%d-%d' % (nc, nc // 10))
+    f = open(myUtils.getStatName(cfg, numIndivs, numLoci))
+    l = f.readline()
+    l = f.readline()
+    study_gen = cfg.declineGen + 1
+    while l != 'temp\n':
+        l = f.readline()
+    f.readline()  # pcrits
+    l = f.readline()
+    tdecl = defaultdict(list)
+    while l != "":
+        toks = l.rstrip().split(" ")
+        #rep = int(toks[0])
+        ref = int(toks[1])
+        gen = int(toks[2])
+        if gen != study_gen:
+            l = f.readline()
+            continue
+        stat = toks[-1].split('#')  # Nei/Tajima 0+
+        tdecl[ref].append((flt(stat[0]), flt(stat[2])))
+        l = f.readline()
+    bp_temp = []
+    refGens = sorted(list(tdecl.keys()))
+    print(refGens)
+    for ref in refGens:
+        p = 0
+        bp_temp.append([y[p] if y[p] > 0 else 100000 for y in tdecl[ref]])
+    sns.boxplot(bp_temp, sym='', ax=ax)
     ax.set_ylim(0, nc // 5)
 
 
@@ -140,12 +157,13 @@ def doPlot(ax, nc, last_row):
 
 plt.ioff()
 numRows = len(ncs)
-fig, axs = plt.subplots(numRows, 2, figsize=(16, 9),
-                        squeeze=False)
+fig = plt.figure(figsize=(16, 9))
 for row in range(numRows):
-    ax = axs[row, 0]
+    ax = fig.add_subplot(numRows, 2, 1 + 2 * row)
     doPlot(ax, ncs[row], row == numRows - 1)
-    ax = axs[row, 1]
-    doCI(ax, ncs[row], row == numRows - 1)
+    ax = fig.add_subplot(numRows, 4, 3 + 4 * row)
+    doLDNeCI(ax, ncs[row], row == numRows - 1)
+    ax = fig.add_subplot(numRows, 4, 4 + 4 * row)
+    doTempCI(ax, ncs[row], row == numRows - 1)
 plt.savefig('decline-%d-%d.png' % (numIndivs, numLoci))
 plt.savefig('decline-%d-%d.eps' % (numIndivs, numLoci))
