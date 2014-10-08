@@ -11,13 +11,15 @@ import seaborn as sns
 import myUtils
 from myUtils import flt
 
-if len(sys.argv) != 2:
-    print "Syntax:", sys.argv[0], "<conffile>"
+if len(sys.argv) != 4:
+    print "Syntax:", sys.argv[0], "<conffile> <indivs> <loci>"
     sys.exit(-1)
 
 etc = myUtils.getEtc()
 
 cfg = myUtils.getConfig(sys.argv[1])
+numIndivs = int(sys.argv[1])
+numLoci = int(sys.argv[2])
 
 LD = {}
 LDb = {}
@@ -43,7 +45,6 @@ for t in cfg.futureGens:
     ys.append(y)
     #print t, y
 
-numIndivs, numLoci = 60, 50
 if numLoci == 20:
     for irep, ref, gen, vals in myUtils.getMLNE(cfg, numIndivs, numLoci):
         if ref == 50:

@@ -23,7 +23,8 @@ decline
 python scripts/figDecline.py 60 20
 python scripts/figDecline.py 60 50
 wave plot
-python scripts/plotWave.py season-500-700
+python scripts/plotWave.py season-500-700 60 20
+python scripts/plotWave.py season-500-700 60 50
 
 
 MLNE
