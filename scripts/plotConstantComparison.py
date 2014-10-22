@@ -49,7 +49,8 @@ def plotComparison(ax, nc, sampleStrat, startCol, endRow):
         l = f.readline()
         toks = l.rstrip().split(' ')
         stat = toks[3].split('#')  # careful with pcrit
-        LD[gen].append(flt(stat[1]))
+        st = flt(stat[1])
+        LD[gen].append(st if st < 100000 else 100000)
         l = f.readline()
         #toks = l.rstrip().split(' ')
         #het[gen].append(flt(toks[1]))  # pcrit...
@@ -68,7 +69,8 @@ def plotComparison(ax, nc, sampleStrat, startCol, endRow):
             l = f.readline()
             continue
         stat = toks[-3].split('#')  # careful with pcrit
-        mytemp[dist].append(flt(stat[1]))
+        st = flt(stat[1])
+        mytemp[dist].append(st if st > 0 and st < 100000 else 100000)
         l = f.readline()
     sns.boxplot([mytemp[span] for span in spans] + [[LD[cfg.futureGens[0]]]],
                 sym='', ax=ax)

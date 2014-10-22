@@ -18,8 +18,8 @@ if len(sys.argv) != 4:
 etc = myUtils.getEtc()
 
 cfg = myUtils.getConfig(sys.argv[1])
-numIndivs = int(sys.argv[1])
-numLoci = int(sys.argv[2])
+numIndivs = int(sys.argv[2])
+numLoci = int(sys.argv[3])
 
 LD = {}
 LDb = {}
