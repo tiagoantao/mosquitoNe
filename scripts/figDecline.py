@@ -95,8 +95,6 @@ def doTempCI(ax, nc, last_row):
     for g in study_gens:
         p = 1
         bp_temp.append([y[p] if y[p] > 0 and y[p] < 100000 else 100000 for y in tdecl[g]])
-    if nc == 2000:
-        print(bp_temp[1])
     sns.boxplot(bp_temp, sym='', ax=ax)
     ax.set_xticklabels([str(x - cfg.declineGen) for x in refGens])
     ax.set_ylim(0, nc // 1)
