@@ -53,6 +53,7 @@ def doLDNeCI(ax, nc, last_row):
         p = 0 if i == 0 else 1
         bp_ld.append([y[p] if y[p] > 0 else 100000 for y in LD[i]])
     sns.boxplot(bp_ld, sym='', ax=ax)
+    ax.set_xticklabels(['Bot CI\nNe=%d' % nc, 'Top CI\nNe=%d' % (nc / 10)])
     ax.set_ylim(0, nc // 5)
 
 
@@ -61,7 +62,10 @@ def doTempCI(ax, nc, last_row):
     f = open(myUtils.getStatName(cfg, numIndivs, numLoci))
     l = f.readline()
     l = f.readline()
-    study_gen = cfg.declineGen + 1
+    #study_gen = cfg.declineGen + 1
+    study_ref = 49
+    study_gens = [cfg.declineGen + 1, cfg.declineGen + 6,
+                  cfg.declineGen + 12, cfg.declineGen + 24]
     while l != 'temp\n':
         l = f.readline()
     f.readline()  # pcrits
@@ -72,20 +76,30 @@ def doTempCI(ax, nc, last_row):
         #rep = int(toks[0])
         ref = int(toks[1])
         gen = int(toks[2])
-        if gen != study_gen:
+        #if gen != study_gen:
+        #    l = f.readline()
+        #    continue
+        if ref != study_ref:
+            l = f.readline()
+            continue
+        if gen not in study_gens:
             l = f.readline()
             continue
         stat = toks[-1].split('#')  # Nei/Tajima 0+
-        tdecl[ref].append((flt(stat[0]), flt(stat[2])))
+        #tdecl[ref].append((flt(stat[0]), flt(stat[2])))
+        tdecl[gen].append((flt(stat[0]), flt(stat[2])))
         l = f.readline()
     bp_temp = []
     refGens = sorted(list(tdecl.keys()))
-    print(refGens)
-    for ref in refGens:
-        p = 0
-        bp_temp.append([y[p] if y[p] > 0 else 100000 for y in tdecl[ref]])
+    #for g in refGens:
+    for g in study_gens:
+        p = 1
+        bp_temp.append([y[p] if y[p] > 0 and y[p] < 100000 else 100000 for y in tdecl[g]])
+    if nc == 2000:
+        print(bp_temp[1])
     sns.boxplot(bp_temp, sym='', ax=ax)
-    ax.set_ylim(0, nc // 5)
+    ax.set_xticklabels([str(x - cfg.declineGen) for x in refGens])
+    ax.set_ylim(0, nc // 1)
 
 
 def doPlot(ax, nc, last_row):
