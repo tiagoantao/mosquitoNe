@@ -53,14 +53,14 @@ def doPlot(ax, nc, span, startCol, endRow):
             val = float(stat[1])
             sampRes[-1].append([val if val > 0 else 100000])
             l = f.readline()
-    sns.boxplot(sampRes, notch=0, sym='', ax=ax)
-    ax.set_ylim(0, 2 * nc)
-    ax.get_yaxis().set_ticks([nc // 2, nc, 3 * nc // 2, 2 * nc])
+    sns.boxplot(sampRes, notch=0, sym='', ax=ax, whis=[2.75, 97.5])
+    ax.set_ylim(0, 3 * nc)
+    ax.get_yaxis().set_ticks([nc // 2, nc, 3 * nc // 2, 2 * nc, 3 * nc])
     if not startCol:
         ax.set_yticklabels(['', '', '', ''])
     if endRow:
         ax.set_xticklabels([str(sampleStrat) for sampleStrat in sampleStrats])
-    ax.axhline(nc)
+    ax.axhline(nc, lw=0.4)
 
 plt.ioff()
 numCols = len(spans)

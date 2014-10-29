@@ -2,7 +2,7 @@ import sys
 import ConfigParser
 
 import numpy as np
-from scipy import stats
+#from scipy import stats
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
@@ -85,20 +85,25 @@ def doPlot(ax, nc, sampleStrat, startCol):
         point[dist - 1].append(flt(stat[1]))
         low[dist - 1].append(flt(stat[2]))
         l = f.readline()
-    ax.plot([None] + [np.median([y if y > 0 and y < 100000 else 100000 for y in x]) for x in high])
-    ax.plot([None] + [np.median([y if y > 0 and y < 100000 else 100000 for y in x]) for x in point],
+    ax.plot([None] + [np.median([y if y > 0 and y < 100000 else 100000
+                                 for y in x]) for x in high],
+            'k--')
+    ax.plot([None] + [np.median([y if y > 0 and y < 100000 else 100000
+                                 for y in x]) for x in point],
             'k')
-    ax.plot([None] + [np.median([y if y > 0 and y < 100000 else 100000 for y in x]) for x in low])
+    ax.plot([None] + [np.median([y if y > 0 and y < 100000 else 100000
+                                 for y in x]) for x in low],
+            'k--')
     if do_mlne:
         ax.plot([None] + [np.median([y if y > 0 and y < 100000 else 100000 for y in x])
-                          for x in mhigh], 'k-.')
+                          for x in mhigh], 'r--')
         ax.plot([None] + [np.median([y if y > 0 and y < 100000 else 100000 for y in x])
-                          for x in mpoint], '-.')
+                          for x in mpoint], 'r')
         ax.plot([None] + [np.median([y if y > 0 and y < 100000 else 100000 for y in x])
-                          for x in mlow], '-.')
+                          for x in mlow], 'r--')
     ax.set_ylim(0, 3 * nc)
     ax.get_yaxis().set_ticks([nc // 2, nc, 3 * nc // 2, 2 * nc, 3 * nc])
-    ax.axhline(nc)
+    ax.axhline(nc, lw=00.4)
     ax.set_xlim(0, len(point))
     if not startCol:
         ax.set_yticklabels(['', '', '', ''])
