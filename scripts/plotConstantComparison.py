@@ -30,6 +30,20 @@ ncs, spans, sampleStrats = getPlotConfig(sys.argv[1])
 def plotComparison(ax, nc, sampleStrat, startCol, endRow):
     cfg = myUtils.getConfig('simple%d' % nc)
     numIndivs, numLoci = sampleStrat
+    if numIndivs == 60 and numLoci == 20 and nc == 1000:
+        do_mlne = True
+    else:
+        do_mlne = False
+    if do_mlne:
+        myml = {}
+        for span in spans:
+            myml[span] = []
+        for rep, ref, gen, vals in myUtils.getMLNE(cfg, numIndivs, numLoci):
+            dist = gen - ref
+            if dist not in spans:
+                continue
+            val = vals[1]
+            myml[dist].append(val)
     fname = myUtils.getStatName(cfg, numIndivs, numLoci)
     f = open(fname)
     f.readline()
@@ -74,8 +88,12 @@ def plotComparison(ax, nc, sampleStrat, startCol, endRow):
         l = f.readline()
     sns.boxplot([mytemp[span] for span in spans] + [[LD[cfg.futureGens[0]]]],
                 sym='', ax=ax)
-    ax.set_ylim(0, 2 * nc)
-    ax.get_yaxis().set_ticks([nc // 2, nc, 3 * nc // 2, 2 * nc])
+    if do_mlne:
+        sns.boxplot([myml[span] for span in spans] + [],
+                    sym='', ax=ax, widths=.5, color='bright')
+    ax.set_ylim(0, 3 * nc)
+    #ax.get_yaxis().set_ticks([nc // 2, nc, 3 * nc // 2, 2 * nc])
+    ax.get_yaxis().set_ticks([nc // 2, nc, 3 * nc // 2, 2 * nc, 3 * nc])
     ax.axhline(nc)
     if not startCol:
         ax.set_yticklabels(['', '', '', ''])
